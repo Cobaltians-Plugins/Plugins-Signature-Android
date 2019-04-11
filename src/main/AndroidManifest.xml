@@ -1,0 +1,11 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="io.kristal.signature" >
+
+    <application>
+
+        <activity android:name=".SignatureActivity"
+            android:theme="@style/SignatureTheme"/>
+
+    </application>
+
+</manifest>

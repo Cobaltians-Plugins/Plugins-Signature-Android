@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Signature</string>
+    <string name="menu_ok">OK</string>
+    <string name="signature_title">Signature</string>
+    <string name="sign_instructions">Signez dans la zone blanche</string>
+    <string name="clear">Supprimer</string>
+</resources>
