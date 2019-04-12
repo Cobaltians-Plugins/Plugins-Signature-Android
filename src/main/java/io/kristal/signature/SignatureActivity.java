@@ -12,6 +12,7 @@ import android.graphics.RectF;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.util.AttributeSet;
@@ -105,12 +106,14 @@ public final class SignatureActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_ok) {
+
             //Clicking OK, save signature as .jpg, and send back its filepath and base64 version
+            final Context context = this;
             new Thread(new Runnable() {
                 public void run() {
                     //Defining directory and filepath
                     File directory = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-                    File filePath = ImageUtils.createImageFile(directory,".jpg");
+                    Image image = new Image(directory, ".jpg", context);
 
                     // generate bitmap of signature
                     Bitmap mBitmap =  Bitmap.createBitmap (mContent.getWidth(), mContent.getHeight(), Bitmap.Config.RGB_565);
@@ -118,14 +121,14 @@ public final class SignatureActivity extends AppCompatActivity {
                     mContent.draw(canvas);
 
                     //Save bitmap to jpg
-                    ImageUtils.bmpToJpg(mBitmap,100,filePath);
+                    image.saveBmp(mBitmap,100);
 
                     //Save bitmap in base64
-                    String base64 = ImageUtils.bmpToBase64(mBitmap,90);
+                    String base64 = image.saveBase64(mBitmap);
 
                     Intent intent = new Intent();
                     intent.putExtra(EXTRA_BASE64, base64);
-                    intent.putExtra(EXTRA_FILEPATH, filePath);
+                    intent.putExtra(EXTRA_FILEPATH, image.getPath());
                     setResult(RESULT_OK, intent);
                 }
             }).start();
