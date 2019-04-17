@@ -24,6 +24,6 @@ android {
 
 dependencies {
     implementation project(':cobalt')
-    implementation "com.android.support:cardview-v7:$project.ext.androidSupportCardviewVersion"
-    implementation "com.android.support:exifinterface:$project.ext.androidSupportCardviewVersion"
+    implementation "com.android.support:cardview-v7:$project.ext.androidSupportVersion"
+    implementation "com.android.support:exifinterface:$project.ext.androidSupportVersion"
 }
