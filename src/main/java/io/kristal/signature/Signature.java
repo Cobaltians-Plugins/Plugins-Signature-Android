@@ -11,6 +11,7 @@ import org.cobaltians.cobalt.plugin.CobaltPluginWebContainer;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Random;
 
 
 public class Signature extends CobaltAbstractPlugin {
@@ -19,7 +20,7 @@ public class Signature extends CobaltAbstractPlugin {
 
     private CobaltFragment fragment;
     private Context context;
-    private String callback;
+    private String mPluginName;
     private int request;
 
     /*******************************************************************************************************
@@ -46,10 +47,9 @@ public class Signature extends CobaltAbstractPlugin {
             fragment = webContainer.getFragment();
             context = webContainer.getActivity();
             String action = message.getString(Cobalt.kJSAction);
-            JSONObject data = message.getJSONObject(Cobalt.kJSData);
-            callback = message.getString(Cobalt.kJSCallback);
-            request = callback.hashCode();
+            request = new Random().nextInt(254);
             Intent intent = new Intent(context, SignatureActivity.class);
+            mPluginName = message.getString(Cobalt.kJSPluginName);
 
             if ("sign".equals(action)) {
                 fragment.startActivityForResult(intent, request);
@@ -62,10 +62,7 @@ public class Signature extends CobaltAbstractPlugin {
         catch(JSONException exception) {
             if (Cobalt.DEBUG) {
                 Log.e(TAG, "onMessage: wrong format, possible issues: \n" +
-                        "\t- missing 'action' field or not a string,\n" +
-                        "\t- missing 'data' field or not a object,\n" +
-                        "\t- missing 'data.actions' field or not an array,\n" +
-                        "\t- missing 'callback' field or not a string.\n");
+                        "\t- missing 'action' field or not a string,\n");
             }
             exception.printStackTrace();
         }
@@ -78,15 +75,15 @@ public class Signature extends CobaltAbstractPlugin {
                 String base64 = data.getStringExtra(SignatureActivity.EXTRA_BASE64);
                 try {
                     JSONObject callbackData = new JSONObject();
-                    callbackData.put("picture", base64);
                     callbackData.put("id", id);
-                    fragment.sendCallback(callback, callbackData);
+                    callbackData.put("picture", base64);
+                    fragment.sendPlugin(mPluginName, callbackData);
                 } catch (JSONException exception) {
                     exception.printStackTrace();
                 }
             } else {
                 JSONObject callbackData = new JSONObject();
-                fragment.sendCallback(callback, callbackData);
+                fragment.sendPlugin(mPluginName, callbackData);
             }
         }
     }

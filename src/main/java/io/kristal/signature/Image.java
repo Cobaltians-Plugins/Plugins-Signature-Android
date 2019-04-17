@@ -72,7 +72,7 @@ public final class Image implements Parcelable {
                     + extension + " could not be created.", exception);
         }
 
-        mUri = FileProvider.getUriForFile(context,context.getPackageName() +".files.provider", file);
+        mUri = FileProvider.getUriForFile(context,context.getPackageName() + ".files.provider", file);
         mPath = file.getAbsolutePath();
     }
 
@@ -395,4 +395,5 @@ public final class Image implements Parcelable {
         }
         return base64;
     }
+
 }

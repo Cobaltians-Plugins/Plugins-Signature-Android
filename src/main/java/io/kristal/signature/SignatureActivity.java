@@ -46,6 +46,8 @@ public final class SignatureActivity extends AppCompatActivity {
     private Button clear_button;
     private boolean draw;
     private int shortAnimationDuration;
+    Image image;
+    String base64;
 
 
     /***********************************************************************************************
@@ -109,11 +111,11 @@ public final class SignatureActivity extends AppCompatActivity {
 
             //Clicking OK, save signature as .jpg, and send back its filepath and base64 version
             final Context context = this;
-            new Thread(new Runnable() {
+            Thread thread = new Thread(new Runnable() {
                 public void run() {
                     //Defining directory and filepath
                     File directory = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-                    Image image = new Image(directory, ".jpg", context);
+                    image = new Image(directory, ".jpg", context);
 
                     // generate bitmap of signature
                     Bitmap mBitmap =  Bitmap.createBitmap (mContent.getWidth(), mContent.getHeight(), Bitmap.Config.RGB_565);
@@ -124,14 +126,20 @@ public final class SignatureActivity extends AppCompatActivity {
                     image.saveBmp(mBitmap,100);
 
                     //Save bitmap in base64
-                    String base64 = image.saveBase64(mBitmap);
+                    base64 = image.saveBase64(mBitmap);
+                 }
+            });
+            thread.start();
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
-                    Intent intent = new Intent();
-                    intent.putExtra(EXTRA_BASE64, base64);
-                    intent.putExtra(EXTRA_FILEPATH, image.getPath());
-                    setResult(RESULT_OK, intent);
-                }
-            }).start();
+            Intent intent = new Intent();
+            intent.putExtra(EXTRA_BASE64, base64);
+            intent.putExtra(EXTRA_FILEPATH, image.getPath());
+            setResult(RESULT_OK, intent);
             finish();
             return true;
         }
@@ -139,6 +147,9 @@ public final class SignatureActivity extends AppCompatActivity {
             return super.onOptionsItemSelected(item);
         }
     }
+
+
+
 
     /***********************************************************************************************
      *
