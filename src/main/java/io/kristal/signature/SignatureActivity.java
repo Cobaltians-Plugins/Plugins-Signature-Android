@@ -36,6 +36,7 @@ public final class SignatureActivity extends AppCompatActivity {
 
     private static final String TAG = SignatureActivity.class.getSimpleName();
 
+    public static final String EXTRA_SIZE = "io.kristal.signature.SignatureActivity.EXTRA_SIZE";
     public static final String EXTRA_FILEPATH = "io.kristal.signature.SignatureActivity.EXTRA_FILEPATH";
     public static final String EXTRA_BASE64 = "io.kristal.signature.SignatureActivity.EXTRA_BASE64";
 
@@ -48,6 +49,7 @@ public final class SignatureActivity extends AppCompatActivity {
     private int shortAnimationDuration;
     Image image;
     String base64;
+    private int mSize;
 
 
     /***********************************************************************************************
@@ -60,6 +62,8 @@ public final class SignatureActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signature);
+
+        mSize = getIntent().getIntExtra(EXTRA_SIZE,0);
 
         mContent = (LinearLayout) this.findViewById(R.id.layout);
         mSignature = new signature(this, null);
@@ -123,10 +127,10 @@ public final class SignatureActivity extends AppCompatActivity {
                     mContent.draw(canvas);
 
                     //Save bitmap to jpg
-                    image.saveBmp(mBitmap,100);
+                    image.saveBmp(mBitmap,50);
 
-                    //Save bitmap in base64
-                    base64 = image.saveBase64(mBitmap);
+                    //Save bitmap in base64 at requiredSize
+                    base64 = image.toBase64(context, mSize);
                  }
             });
             thread.start();
@@ -147,9 +151,6 @@ public final class SignatureActivity extends AppCompatActivity {
             return super.onOptionsItemSelected(item);
         }
     }
-
-
-
 
     /***********************************************************************************************
      *

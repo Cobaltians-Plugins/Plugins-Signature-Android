@@ -270,78 +270,6 @@ public final class Image implements Parcelable {
         String base64 = "";
 
         Bitmap bitmap = getBitmap(context, requestedSize);
-        return saveBase64(bitmap);
-    }
-
-    /**
-     * Bitmap rotation method
-     *
-     * Copied from https://android.googlesource.com/platform/packages/apps/Mms/+/master/src/com/android/mms/ui/UriImage.java
-     *
-     * @param bitmap The input bitmap
-     * @param degrees The rotation angle
-     */
-    private @NonNull Bitmap rotateBitmap(@NonNull Bitmap bitmap, int degrees) {
-        if (degrees != 0) {
-            int width = bitmap.getWidth();
-            int height = bitmap.getHeight();
-
-            Matrix matrix = new Matrix();
-            matrix.setRotate(degrees, (float) width / 2, (float) height / 2);
-
-            try {
-                Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height,
-                        matrix, true);
-                bitmap.recycle();
-                bitmap = rotatedBitmap;
-            }
-            catch (OutOfMemoryError exception) {
-                Log.w(TAG, "rotateBitmap: OOM", exception);
-                // We have no memory to rotate. Return the original bitmap.
-            }
-        }
-
-        return bitmap;
-    }
-
-    // Create an image file with unique name
-    public File uniqueName(File directory, String extension){
-        Date now = new Date();
-        String filename = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(now)
-                + "-" + now.getTime();
-        try {
-            // / Make sure the Pictures directory exists.
-            return File.createTempFile(filename,    /* prefix */
-                    extension,                      /* suffix */
-                    directory);                     /* directory */
-        }
-        catch (IOException exception) {
-            Log.e(TAG, "createImageFile: " + directory.getAbsolutePath() + "/" + filename
-                    + extension + " could not be created.", exception);
-            return null;
-        }
-        catch (SecurityException exception) {
-            Log.e(TAG, "createImageFile: " + directory.getAbsolutePath() + "/" + filename
-                    + extension + " could not be created.", exception);
-            return null;
-        }
-    }
-
-    //Save a Bitmap to JPG at defined path with compressRate
-    public void saveBmp(Bitmap bitmap, int compressRate){
-        try {
-            FileOutputStream mFileOutStream = new FileOutputStream(mPath);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, compressRate, mFileOutStream);
-            mFileOutStream.flush();
-            mFileOutStream.close();
-        } catch (IOException exception) {
-            Log.e(TAG, "toJpg: cannot save bitmap at " + mPath, exception);
-        }
-    }
-
-    // Save a Bitmap to Base64
-    public @Nullable String saveBase64(Bitmap bitmap) {
-        String base64 = "";
         if (bitmap != null) {
             ByteArrayOutputStream baos = null;
             int attempts = 1;
@@ -393,7 +321,50 @@ public final class Image implements Parcelable {
                 }
             }
         }
+
         return base64;
     }
 
+    /**
+     * Bitmap rotation method
+     *
+     * Copied from https://android.googlesource.com/platform/packages/apps/Mms/+/master/src/com/android/mms/ui/UriImage.java
+     *
+     * @param bitmap The input bitmap
+     * @param degrees The rotation angle
+     */
+    private @NonNull Bitmap rotateBitmap(@NonNull Bitmap bitmap, int degrees) {
+        if (degrees != 0) {
+            int width = bitmap.getWidth();
+            int height = bitmap.getHeight();
+
+            Matrix matrix = new Matrix();
+            matrix.setRotate(degrees, (float) width / 2, (float) height / 2);
+
+            try {
+                Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height,
+                        matrix, true);
+                bitmap.recycle();
+                bitmap = rotatedBitmap;
+            }
+            catch (OutOfMemoryError exception) {
+                Log.w(TAG, "rotateBitmap: OOM", exception);
+                // We have no memory to rotate. Return the original bitmap.
+            }
+        }
+
+        return bitmap;
+    }
+
+    //Save a Bitmap to JPG at defined path with compressRate
+    public void saveBmp(Bitmap bitmap, int compressRate){
+        try {
+            FileOutputStream mFileOutStream = new FileOutputStream(mPath);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, compressRate, mFileOutStream);
+            mFileOutStream.flush();
+            mFileOutStream.close();
+        } catch (IOException exception) {
+            Log.e(TAG, "toJpg: cannot save bitmap at " + mPath, exception);
+        }
+    }
 }

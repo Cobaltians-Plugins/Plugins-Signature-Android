@@ -22,6 +22,7 @@ public class Signature extends CobaltAbstractPlugin {
     private Context context;
     private String mPluginName;
     private int request;
+    private static final int DEFAULT_SIZE = 800;
 
     /*******************************************************************************************************
      * MEMBERS
@@ -47,11 +48,21 @@ public class Signature extends CobaltAbstractPlugin {
             fragment = webContainer.getFragment();
             context = webContainer.getActivity();
             String action = message.getString(Cobalt.kJSAction);
+            JSONObject data = message.getJSONObject(Cobalt.kJSData);
             request = new Random().nextInt(254);
             Intent intent = new Intent(context, SignatureActivity.class);
             mPluginName = message.getString(Cobalt.kJSPluginName);
 
             if ("sign".equals(action)) {
+                if (data != null) {
+                    int size = data.optInt("size");
+                    if (size != 0) {
+                        intent.putExtra(SignatureActivity.EXTRA_SIZE, size);
+                    }
+                }
+                else {
+                    intent.putExtra(SignatureActivity.EXTRA_SIZE, DEFAULT_SIZE);
+                }
                 fragment.startActivityForResult(intent, request);
             }
             else if (Cobalt.DEBUG) {
@@ -62,6 +73,7 @@ public class Signature extends CobaltAbstractPlugin {
         catch(JSONException exception) {
             if (Cobalt.DEBUG) {
                 Log.e(TAG, "onMessage: wrong format, possible issues: \n" +
+                        "\t- missing 'data' field or not a object,\n" +
                         "\t- missing 'action' field or not a string,\n");
             }
             exception.printStackTrace();
