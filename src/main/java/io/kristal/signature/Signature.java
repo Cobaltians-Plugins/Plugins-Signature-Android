@@ -2,6 +2,8 @@ package io.kristal.signature;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.cobaltians.cobalt.Cobalt;
@@ -20,7 +22,6 @@ public class Signature extends CobaltAbstractPlugin {
 
     private CobaltFragment fragment;
     private Context context;
-    private String mPluginName;
     private int request;
     private static final int DEFAULT_SIZE = 800;
 
@@ -34,49 +35,40 @@ public class Signature extends CobaltAbstractPlugin {
      * CONSTRUCTORS
      **************************************************************************************/
 
-    public static CobaltAbstractPlugin getInstance(CobaltPluginWebContainer webContainer) {
-        if (sInstance == null) {
+    public static Signature getInstance()
+    {
+        if (sInstance == null)
+        {
             sInstance = new Signature();
         }
         return sInstance;
     }
+    
 
-    @Override
-    public void onMessage(CobaltPluginWebContainer webContainer, JSONObject message) {
-        try {
-            Log.d(TAG,"Entering onMessage");
-            fragment = webContainer.getFragment();
-            context = webContainer.getActivity();
-            String action = message.getString(Cobalt.kJSAction);
-            JSONObject data = message.getJSONObject(Cobalt.kJSData);
-            request = new Random().nextInt(254);
-            Intent intent = new Intent(context, SignatureActivity.class);
-            mPluginName = message.getString(Cobalt.kJSPluginName);
+    public void onMessage(@NonNull CobaltPluginWebContainer webContainer, @NonNull String action,
+            @Nullable JSONObject data, @Nullable String callbackChannel)
+    {
+        Log.d(TAG,"Entering onMessage");
+        // TODO: check nullabillity
+        fragment = webContainer.getFragment();
+        context = webContainer.getActivity();
+        request = new Random().nextInt(254);
+        Intent intent = new Intent(context, SignatureActivity.class);
 
-            if ("sign".equals(action)) {
-                if (data != null) {
-                    int size = data.optInt("size");
-                    if (size != 0) {
-                        intent.putExtra(SignatureActivity.EXTRA_SIZE, size);
-                    }
+        if ("sign".equals(action)) {
+            if (data != null) {
+                int size = data.optInt("size");
+                if (size != 0) {
+                    intent.putExtra(SignatureActivity.EXTRA_SIZE, size);
                 }
-                else {
-                    intent.putExtra(SignatureActivity.EXTRA_SIZE, DEFAULT_SIZE);
-                }
-                fragment.startActivityForResult(intent, request);
             }
-            else if (Cobalt.DEBUG) {
-                Log.w(TAG, "onMessage: action '" + action + "' not recognized");
+            else {
+                intent.putExtra(SignatureActivity.EXTRA_SIZE, DEFAULT_SIZE);
             }
-
+            fragment.startActivityForResult(intent, request);
         }
-        catch(JSONException exception) {
-            if (Cobalt.DEBUG) {
-                Log.e(TAG, "onMessage: wrong format, possible issues: \n" +
-                        "\t- missing 'data' field or not a object,\n" +
-                        "\t- missing 'action' field or not a string,\n");
-            }
-            exception.printStackTrace();
+        else if (Cobalt.DEBUG) {
+            Log.w(TAG, "onMessage: action '" + action + "' not recognized");
         }
     }
 
@@ -89,13 +81,15 @@ public class Signature extends CobaltAbstractPlugin {
                     JSONObject callbackData = new JSONObject();
                     callbackData.put("id", id);
                     callbackData.put("picture", base64);
-                    fragment.sendPlugin(mPluginName, callbackData);
+                    // TODO: use PubSub & callbackChannel
+                    //fragment.sendPlugin(mPluginName, callbackData);
                 } catch (JSONException exception) {
                     exception.printStackTrace();
                 }
             } else {
                 JSONObject callbackData = new JSONObject();
-                fragment.sendPlugin(mPluginName, callbackData);
+                // TODO: use PubSub & callbackChannel
+                //fragment.sendPlugin(mPluginName, callbackData);
             }
         }
     }
