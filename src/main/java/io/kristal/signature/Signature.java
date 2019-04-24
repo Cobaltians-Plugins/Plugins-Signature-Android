@@ -22,6 +22,7 @@ public class Signature extends CobaltAbstractPlugin {
 
     private CobaltFragment fragment;
     private Context context;
+    private String callback;
     private int request;
     private static final int DEFAULT_SIZE = 800;
 
@@ -48,27 +49,37 @@ public class Signature extends CobaltAbstractPlugin {
     public void onMessage(@NonNull CobaltPluginWebContainer webContainer, @NonNull String action,
             @Nullable JSONObject data, @Nullable String callbackChannel)
     {
-        Log.d(TAG,"Entering onMessage");
-        // TODO: check nullabillity
-        fragment = webContainer.getFragment();
-        context = webContainer.getActivity();
-        request = new Random().nextInt(254);
-        Intent intent = new Intent(context, SignatureActivity.class);
 
-        if ("sign".equals(action)) {
-            if (data != null) {
-                int size = data.optInt("size");
-                if (size != 0) {
-                    intent.putExtra(SignatureActivity.EXTRA_SIZE, size);
+        if (webContainer.getFragment() != null){
+            if(webContainer.getActivity() !=null) {
+                fragment = webContainer.getFragment();
+                context = webContainer.getActivity();
+                callback = callbackChannel;
+                request = new Random().nextInt(254);
+                Intent intent = new Intent(context, SignatureActivity.class);
+
+                if ("sign".equals(action)) {
+                    if (data != null) {
+                        int size = data.optInt("size");
+                        if (size != 0) {
+                            intent.putExtra(SignatureActivity.EXTRA_SIZE, size);
+                        }
+                    }
+                    else {
+                        intent.putExtra(SignatureActivity.EXTRA_SIZE, DEFAULT_SIZE);
+                    }
+                    fragment.startActivityForResult(intent, request);
+                }
+                else if (Cobalt.DEBUG) {
+                    Log.w(TAG, "onMessage: action '" + action + "' not recognized");
                 }
             }
             else {
-                intent.putExtra(SignatureActivity.EXTRA_SIZE, DEFAULT_SIZE);
+                Log.e(TAG, "webContainer activity is null");
             }
-            fragment.startActivityForResult(intent, request);
         }
-        else if (Cobalt.DEBUG) {
-            Log.w(TAG, "onMessage: action '" + action + "' not recognized");
+        else {
+            Log.e(TAG, "webContainer fragment is null");
         }
     }
 
@@ -81,15 +92,13 @@ public class Signature extends CobaltAbstractPlugin {
                     JSONObject callbackData = new JSONObject();
                     callbackData.put("id", id);
                     callbackData.put("picture", base64);
-                    // TODO: use PubSub & callbackChannel
-                    //fragment.sendPlugin(mPluginName, callbackData);
+                    Cobalt.publishMessage(callbackData, callback);
                 } catch (JSONException exception) {
                     exception.printStackTrace();
                 }
             } else {
                 JSONObject callbackData = new JSONObject();
-                // TODO: use PubSub & callbackChannel
-                //fragment.sendPlugin(mPluginName, callbackData);
+                Cobalt.publishMessage(callbackData, callback);
             }
         }
     }
