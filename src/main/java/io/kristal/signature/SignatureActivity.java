@@ -127,11 +127,11 @@ public final class SignatureActivity extends AppCompatActivity {
                     mContent.draw(canvas);
 
                     //Save bitmap to jpg
-                    image.saveBmp(mBitmap,50);
+                    image.saveBmp(mBitmap,50, mSize);
 
                     //Save bitmap in base64 at requiredSize
                     base64 = image.toBase64(context, mSize);
-                 }
+                }
             });
             thread.start();
             try {

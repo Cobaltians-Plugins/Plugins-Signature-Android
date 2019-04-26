@@ -237,7 +237,7 @@ public final class Image implements Parcelable {
                     && attempts < NUMBER_OF_RESIZE_ATTEMPTS);
 
             if (bitmap == null
-                && attempts >= NUMBER_OF_RESIZE_ATTEMPTS) {
+                    && attempts >= NUMBER_OF_RESIZE_ATTEMPTS) {
                 Log.v(TAG, "getBitmap: gave up after too many attempts to resize");
             }
         }
@@ -357,8 +357,21 @@ public final class Image implements Parcelable {
     }
 
     //Save a Bitmap to JPG at defined path with compressRate
-    public void saveBmp(Bitmap bitmap, int compressRate){
+    public void saveBmp(Bitmap bitmap, int compressRate, int requiredSize){
         try {
+            // Resizing to requiredSize
+            int resizedWidth = bitmap.getWidth();
+            int resizedHeight = bitmap.getHeight();
+            int longestDimension = Math.max(resizedWidth, resizedHeight);
+            if (longestDimension > requiredSize)
+            {
+                float ratio = (float) longestDimension / (float) requiredSize;
+                resizedWidth = (int)Math.floor(resizedWidth / ratio);
+                resizedHeight = (int)Math.floor(resizedHeight / ratio);
+                bitmap = Bitmap.createScaledBitmap(bitmap, resizedWidth, resizedHeight, true);
+            }
+
+            // Save to JPG
             FileOutputStream mFileOutStream = new FileOutputStream(mPath);
             bitmap.compress(Bitmap.CompressFormat.JPEG, compressRate, mFileOutStream);
             mFileOutStream.flush();
