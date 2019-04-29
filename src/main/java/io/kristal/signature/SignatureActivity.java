@@ -27,6 +27,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import java.io.File;
+import org.cobaltians.cobalt.tools.Image;
 
 /**
  * Created by vincent Rifa on 23/03/2019.
