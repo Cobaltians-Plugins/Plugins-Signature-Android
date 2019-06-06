@@ -27,6 +27,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import java.io.File;
+import org.cobaltians.cobalt.tools.Image;
 
 /**
  * Created by vincent Rifa on 23/03/2019.
@@ -36,6 +37,7 @@ public final class SignatureActivity extends AppCompatActivity {
 
     private static final String TAG = SignatureActivity.class.getSimpleName();
 
+    public static final String EXTRA_SIZE = "io.kristal.signature.SignatureActivity.EXTRA_SIZE";
     public static final String EXTRA_FILEPATH = "io.kristal.signature.SignatureActivity.EXTRA_FILEPATH";
     public static final String EXTRA_BASE64 = "io.kristal.signature.SignatureActivity.EXTRA_BASE64";
 
@@ -46,6 +48,9 @@ public final class SignatureActivity extends AppCompatActivity {
     private Button clear_button;
     private boolean draw;
     private int shortAnimationDuration;
+    Image image;
+    String base64;
+    private int mSize;
 
 
     /***********************************************************************************************
@@ -58,6 +63,8 @@ public final class SignatureActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signature);
+
+        mSize = getIntent().getIntExtra(EXTRA_SIZE,0);
 
         mContent = (LinearLayout) this.findViewById(R.id.layout);
         mSignature = new signature(this, null);
@@ -109,11 +116,11 @@ public final class SignatureActivity extends AppCompatActivity {
 
             //Clicking OK, save signature as .jpg, and send back its filepath and base64 version
             final Context context = this;
-            new Thread(new Runnable() {
+            Thread thread = new Thread(new Runnable() {
                 public void run() {
                     //Defining directory and filepath
                     File directory = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-                    Image image = new Image(directory, ".jpg", context);
+                    image = new Image(directory, ".jpg", context);
 
                     // generate bitmap of signature
                     Bitmap mBitmap =  Bitmap.createBitmap (mContent.getWidth(), mContent.getHeight(), Bitmap.Config.RGB_565);
@@ -121,17 +128,23 @@ public final class SignatureActivity extends AppCompatActivity {
                     mContent.draw(canvas);
 
                     //Save bitmap to jpg
-                    image.saveBmp(mBitmap,100);
+                    image.saveBmp(mBitmap,50, mSize);
 
-                    //Save bitmap in base64
-                    String base64 = image.saveBase64(mBitmap);
-
-                    Intent intent = new Intent();
-                    intent.putExtra(EXTRA_BASE64, base64);
-                    intent.putExtra(EXTRA_FILEPATH, image.getPath());
-                    setResult(RESULT_OK, intent);
+                    //Save bitmap in base64 at requiredSize
+                    base64 = image.toBase64(context, mSize);
                 }
-            }).start();
+            });
+            thread.start();
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            Intent intent = new Intent();
+            intent.putExtra(EXTRA_BASE64, base64);
+            intent.putExtra(EXTRA_FILEPATH, image.getPath());
+            setResult(RESULT_OK, intent);
             finish();
             return true;
         }

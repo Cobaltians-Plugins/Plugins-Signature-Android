@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">Signature</string>
     <string name="menu_ok">OK</string>
     <string name="signature_title">Signature</string>
     <string name="sign_instructions">Sign in the white area</string>

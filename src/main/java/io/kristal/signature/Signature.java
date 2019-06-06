@@ -2,6 +2,8 @@ package io.kristal.signature;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.cobaltians.cobalt.Cobalt;
@@ -11,6 +13,7 @@ import org.cobaltians.cobalt.plugin.CobaltPluginWebContainer;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Random;
 
 
 public class Signature extends CobaltAbstractPlugin {
@@ -21,6 +24,7 @@ public class Signature extends CobaltAbstractPlugin {
     private Context context;
     private String callback;
     private int request;
+    private static final int DEFAULT_SIZE = 800;
 
     /*******************************************************************************************************
      * MEMBERS
@@ -32,42 +36,50 @@ public class Signature extends CobaltAbstractPlugin {
      * CONSTRUCTORS
      **************************************************************************************/
 
-    public static CobaltAbstractPlugin getInstance(CobaltPluginWebContainer webContainer) {
-        if (sInstance == null) {
+    public static Signature getInstance()
+    {
+        if (sInstance == null)
+        {
             sInstance = new Signature();
         }
         return sInstance;
     }
+    
 
-    @Override
-    public void onMessage(CobaltPluginWebContainer webContainer, JSONObject message) {
-        try {
-            Log.d(TAG,"Entering onMessage");
-            fragment = webContainer.getFragment();
-            context = webContainer.getActivity();
-            String action = message.getString(Cobalt.kJSAction);
-            JSONObject data = message.getJSONObject(Cobalt.kJSData);
-            callback = message.getString(Cobalt.kJSCallback);
-            request = callback.hashCode();
-            Intent intent = new Intent(context, SignatureActivity.class);
+    public void onMessage(@NonNull CobaltPluginWebContainer webContainer, @NonNull String action,
+            @Nullable JSONObject data, @Nullable String callbackChannel)
+    {
 
-            if ("sign".equals(action)) {
-                fragment.startActivityForResult(intent, request);
+        if (webContainer.getFragment() != null){
+            if(webContainer.getActivity() !=null) {
+                fragment = webContainer.getFragment();
+                context = webContainer.getActivity();
+                callback = callbackChannel;
+                request = new Random().nextInt(254);
+                Intent intent = new Intent(context, SignatureActivity.class);
+
+                if ("sign".equals(action)) {
+                    if (data != null) {
+                        int size = data.optInt("size");
+                        if (size != 0) {
+                            intent.putExtra(SignatureActivity.EXTRA_SIZE, size);
+                        }
+                    }
+                    else {
+                        intent.putExtra(SignatureActivity.EXTRA_SIZE, DEFAULT_SIZE);
+                    }
+                    fragment.startActivityForResult(intent, request);
+                }
+                else if (Cobalt.DEBUG) {
+                    Log.w(TAG, "onMessage: action '" + action + "' not recognized");
+                }
             }
-            else if (Cobalt.DEBUG) {
-                Log.w(TAG, "onMessage: action '" + action + "' not recognized");
+            else {
+                Log.e(TAG, "webContainer activity is null");
             }
-
         }
-        catch(JSONException exception) {
-            if (Cobalt.DEBUG) {
-                Log.e(TAG, "onMessage: wrong format, possible issues: \n" +
-                        "\t- missing 'action' field or not a string,\n" +
-                        "\t- missing 'data' field or not a object,\n" +
-                        "\t- missing 'data.actions' field or not an array,\n" +
-                        "\t- missing 'callback' field or not a string.\n");
-            }
-            exception.printStackTrace();
+        else {
+            Log.e(TAG, "webContainer fragment is null");
         }
     }
 
@@ -78,15 +90,15 @@ public class Signature extends CobaltAbstractPlugin {
                 String base64 = data.getStringExtra(SignatureActivity.EXTRA_BASE64);
                 try {
                     JSONObject callbackData = new JSONObject();
-                    callbackData.put("picture", base64);
                     callbackData.put("id", id);
-                    fragment.sendCallback(callback, callbackData);
+                    callbackData.put("picture", base64);
+                    Cobalt.publishMessage(callbackData, callback);
                 } catch (JSONException exception) {
                     exception.printStackTrace();
                 }
             } else {
                 JSONObject callbackData = new JSONObject();
-                fragment.sendCallback(callback, callbackData);
+                Cobalt.publishMessage(callbackData, callback);
             }
         }
     }
